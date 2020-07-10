@@ -1,4 +1,6 @@
 const moongoose = require('mongoose');
+const bcrpt = require('bcrypt');
+const saltRounds = 10;
 
 const userSchema = moongoose.Schema({
     name:{
@@ -26,6 +28,24 @@ const userSchema = moongoose.Schema({
         type: Number
     }
 })
+
+userSchema.pre('save', function(next){
+    var user = this;
+    bcrpt.genSalt(saltRounds,function(err,salt){
+        if(user.isModified('password')){ // 패스워드가 바뀔 때만, 암호화 진행 
+        
+            bcrpt.hash(user.password, salt, function(err,hash){
+                if(err) return next(err);
+                user.password = hash;
+                next();
+            })
+        }
+    })
+    // 비밀번호 암호화 시키기
+
+
+})
+ // mongoose method, 저장 전에, function을 진행 
 
 const User = moongoose.model('User',userSchema) // 이름과 shema
 
