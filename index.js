@@ -21,7 +21,7 @@ mongoose.connect(config.mongoURI,{
     .catch(err=>console.log(err))
 
 
-app.get('/',(req,res) => res.send('Hello world!'))
+app.get('/',(req,res) => res.send('Hello world! & siwon'))
 
 app.post('/register',(req, res)=>{
     //회원가입시 필요한 정보들을 client에서 가져오면,
