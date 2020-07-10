@@ -39,6 +39,8 @@ userSchema.pre('save', function(next){
                 user.password = hash;
                 next();
             })
+        } else{
+            next();
         }
     })
     // 비밀번호 암호화 시키기
