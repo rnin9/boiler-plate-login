@@ -29,23 +29,22 @@ const userSchema = moongoose.Schema({
     }
 })
 
-userSchema.pre('save', function(next){
+userSchema.pre('save', function(next){ // 몽구스 기능. 
     var user = this;
-    bcrpt.genSalt(saltRounds,function(err,salt){
         if(user.isModified('password')){ // 패스워드가 바뀔 때만, 암호화 진행 
-        
+            bcrpt.genSalt(saltRounds,function(err,salt){
+               if(err) return next(err);
+            
             bcrpt.hash(user.password, salt, function(err,hash){
                 if(err) return next(err);
                 user.password = hash;
                 next();
             })
-        } else{
+            }) 
+        }else{
             next();
         }
-    })
     // 비밀번호 암호화 시키기
-
-
 })
  // mongoose method, 저장 전에, function을 진행 
 
