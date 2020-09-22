@@ -68,6 +68,20 @@ userSchema.methods.generateToken = function(cb){
         cb(null,user);
        });
 };
+
+userSchema.static.findByToken = function(token,cb){
+    var user = this;
+
+    jwt.verify(token,'Token',function(err,decoded){
+
+        //id를 이용해서 사용자를찾고,
+       
+        user.findOne({"_id": decoded, "token": token}, function(err,user){
+            if(err) return cb(err);  //client token과 db token이 일치하는지 확인
+            cb(null, user);
+        })
+    })
+}
 const User = moongoose.model('User',userSchema) // 이름과 shema
 
 module.exports = {User}  // 다른 곳에서 쓸 수 있도록 한다.

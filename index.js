@@ -7,6 +7,7 @@ const bodyparser = require('body-parser');
 const cookieparser = require('cookie-parser');
 const {User} = require("./models/User");
 const config = require("./config/key");
+const auth = require('./middleware/auth');
 
 // appication/x-www-form-urlencoded 부분 분석 해서 가져옴
 app.use(bodyparser.urlencoded({extended: true}));
@@ -66,8 +67,21 @@ app.post('/login',(req,res)=>{
     })
     })
 
-
     //비밀번호까지 맞으면, token을 생성함.
 })
+
+app.get('api/user/auth', auth, (req,res)=>{     //여길 통과했다는것은, 인증을 완료했다는 뜻.
+    res.status(200).json({
+        _id: req.user._id,
+        isAdmin: req.user.role=== 0? true : false,
+        isAuth: true,
+        email: req.user.email,
+        name: req.user.name,
+        lastname: req.user.lastname,
+        role: req.user.role,
+        image: req.user.image
+    });
+})
+
 
 app.listen(port, ()=> console.log(`Example app listening on port ${port}!`));
