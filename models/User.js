@@ -1,6 +1,8 @@
 const moongoose = require('mongoose');
 const bcrpt = require('bcrypt');
 const saltRounds = 10;
+const jwt = require('jsonwebtoken');
+const { json } = require('body-parser');
 
 const userSchema = moongoose.Schema({
     name:{
@@ -14,7 +16,7 @@ const userSchema = moongoose.Schema({
     },
     password:{
         type: String,
-        maxlength: 50
+        maxlength: 60
     },
     role:{
         type: Number, // number 1이면 관리자, 2면 고객 등등...
@@ -35,19 +37,37 @@ userSchema.pre('save', function(next){ // 몽구스 기능.
             bcrpt.genSalt(saltRounds,function(err,salt){
                if(err) return next(err);
             
-            bcrpt.hash(user.password, salt, function(err,hash){
+            bcrpt.hash(user.password, salt, function(err,hash){  // 비밀번호 암호화 시키기
                 if(err) return next(err);
                 user.password = hash;
                 next();
             })
             }) 
-        }else{
+        }else{       // 빠져나가게 만들어주기, 비밀번호 이외의 것이 들어온경우,
             next();
         }
-    // 비밀번호 암호화 시키기
+   
 })
  // mongoose method, 저장 전에, function을 진행 
 
+userSchema.methods.comparePassword = function(plainPassword, cb){
+    // plain password 1234, 암호화된 비밀번호.
+    bcrpt.compare(plainPassword, this.password, function(err, isMatch){ //bcrpt 사용 
+        if(err) return cb(err);
+        cb(null, isMatch);
+    });
+};
+
+userSchema.methods.generateToken = function(cb){
+    // json webtoken이용하여 token 생성.
+    var user = this;
+    var token = jwt.sign(user._id.toHexString(),'Token');
+    user.token = token;
+    user.save(function(err,user){
+        if(err) return cb(err);
+        cb(null,user);
+       });
+};
 const User = moongoose.model('User',userSchema) // 이름과 shema
 
 module.exports = {User}  // 다른 곳에서 쓸 수 있도록 한다.

@@ -4,6 +4,7 @@ const express = require('express')
 const app = express()
 const port = 5000
 const bodyparser = require('body-parser');
+const cookieparser = require('cookie-parser');
 const {User} = require("./models/User");
 const config = require("./config/key");
 
@@ -11,7 +12,7 @@ const config = require("./config/key");
 app.use(bodyparser.urlencoded({extended: true}));
 // application/json 부분 분석해서 가져옴
 app.use(bodyparser.json());
-
+app.use(cookieparser());
 const mongoose = require('mongoose')
 
 
@@ -36,5 +37,37 @@ app.post('/register',(req, res)=>{
     }) // 몽고 db 메소드
 })
 
+app.post('/login',(req,res)=>{
+   
+    User.findOne({email: req.body.email},(err,user)=>{
+        if(!user){
+         return res.json({
+             loginSuccess: false,   
+             message:"해당하는 이메일을가진 User가 없습니다."    // 요청된 이메일이 db에 존재하는지 찾기 
+         })   
+        }
+        
+        
+    user.comparePassword(req.body.password, (err,isMatch)=>{
+        if(!isMatch){
+            return res.json({
+                loginSuccess:false,
+                message:"비밀번호가 다릅니다."  //이메일이 있으면, 비밀번호가 같은지 확인.
+            })
+        }
+        user.generateToken((err, user)=>{
+            if(err) return res.status(400).send(err);
+
+            res.cookie("x_auth",user.token)
+            .status(200)
+            .json({ loginSuccess : true , userId:user._id});
+            //토큰을 저장한다. 어디에?  쿠키 or local storage or 세션
+        })  
+    })
+    })
+
+
+    //비밀번호까지 맞으면, token을 생성함.
+})
 
 app.listen(port, ()=> console.log(`Example app listening on port ${port}!`));
